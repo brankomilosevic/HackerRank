@@ -22,7 +22,7 @@ vector<string> split(const string &);
 
 // tried with vector - too slow
 // tried with list - too slow
-// it seems finding the posiiton by iterrating the whole rank is not good
+// it seems finding the posiiton by iterrating the whole vector/list is not good
 
 int FindPosition(list<int> &ranks, int play_result){
     int player_rank = 1;
@@ -45,6 +45,7 @@ int FindPosition(list<int> &ranks, int play_result){
 }
 
 vector<int> climbingLeaderboard_slow(vector<int> ranked, vector<int> player) {
+// takes 200 sec for 200,000 initial ranked and 30,000 player results
     vector<int> scores;
     list<int> ranks(ranked.begin(), ranked.end());
     for (auto play_result : player){
@@ -54,10 +55,58 @@ vector<int> climbingLeaderboard_slow(vector<int> ranked, vector<int> player) {
     return scores;
 }
 
-// I wil  try somethign using maps
-vector<int> climbingLeaderboard(vector<int> ranked, vector<int> player) {
+// I wil  try somethign using sets
+// it runs for 50sec (200,000 initial and 30,000 player ranks), still not good
+vector<int> climbingLeaderboard_still_slow(vector<int> &ranked, vector<int> player) {
+    set<int> ranking;
+    set<int>::iterator it;
+    vector<int>::reverse_iterator pos;
 
+    vector<int> player_ranking (player.size());
+    int position;
+
+    it = ranking.begin();
+    for (pos = ranked.rbegin(); pos != ranked.rend(); pos++)
+        it = ranking.insert(it, *pos);
+
+    it = ranking.begin();
+    int i=0;
+    for (auto p : player)
+    {
+        it = ranking.insert(it, p);
+        position = distance(it, ranking.end());
+        // player_ranking.push_back(position);
+        player_ranking[i] = position;
+        ++i;
+    }
+    
+    return player_ranking;
 }
+
+// this one is fast enough, all test passed
+vector<int> climbingLeaderboard(vector<int> &ranked, vector<int> player) {
+    vector<int> player_rank;
+    vector<int>::reverse_iterator ri;
+    vector<int> dist;
+    int pos = 0, len;
+
+    dist.push_back(ranked.back());
+    for(ri = ranked.rbegin(); ri != ranked.rend(); ++ri)
+    {
+        if (dist.back() != *ri)
+            dist.push_back(*ri);
+    }
+    len = dist.size();
+    for (auto p : player)
+    {
+        while (p >= dist[pos] && pos < len)
+            ++pos;
+        player_rank.push_back(len - pos + 1);
+    }
+
+    return player_rank;
+}
+
 int main()
 {
     ofstream fout(getenv("OUTPUT_PATH"));
@@ -98,7 +147,17 @@ int main()
         player[i] = player_item;
     }
 
+//
+    time_t start, end;
+    time(&start);
     vector<int> result = climbingLeaderboard(ranked, player);
+    // vector<int> result = climbingLeaderboard_still_slow(ranked, player);
+    // vector<int> result = climbingLeaderboard_slow(ranked, player);
+    time(&end);
+    cout << "Time taken by function is : " << fixed
+         << double(end - start) << setprecision(5)
+         << " sec " << endl;
+//
 
     for (size_t i = 0; i < result.size(); i++) {
         fout << result[i];
@@ -107,7 +166,7 @@ int main()
             fout << "\n";
         }
 
-        cout << ">>> " << result[i] << '\n';
+//        cout << ">>> " << result[i] << '\n';
     }
 
     fout << "\n";
