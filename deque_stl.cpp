@@ -32,7 +32,8 @@ void printKMax(int arr[], int n, int k)
     for ( int i = k; i < n; ++i )
     {
         // drop the elements that are out of window
-        while(!dq.empty() && dq.front() <= i-k)
+        // to be sure, I have put while loop, but it should not be possible to have more than 1 of these to remove...
+	while(!dq.empty() && dq.front() <= i-k)
             dq.pop_front();
 
         // repeat what we have done for first k elements
